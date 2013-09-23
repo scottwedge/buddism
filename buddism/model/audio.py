@@ -8,7 +8,7 @@ import json
 from tornado.util import ObjectDict
 from redis import Redis
 
-_client = Redis(confif.REDIS_HOST, config.REDIS_PORT, config.REDIS_DB)
+_client = Redis(config.REDIS_HOST, config.REDIS_PORT, config.REDIS_DB)
 _KEY = 'audio'
 
 class AudioDAO(object):

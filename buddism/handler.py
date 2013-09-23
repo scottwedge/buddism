@@ -4,6 +4,7 @@ import json
 import config
 import time
 import tornado
+import os
 
 import buddism.network
 
@@ -16,9 +17,13 @@ _KEY = "FEED"
 class FeedHandler(tornado.web.RequestHandler):
     def get(self):
         data = []
-        for item in  _client.zrange(_KEY, 0, 10, withscores = True):
+        offset = int(self.get_argument('offset', 0))
+        limit  = int(self.get_argument('limit', 20))
+        for item in  _client.zrange(_KEY, offset, limit + offset - 1, withscores = True):
             j_obj = json.loads(item[0])
-            data.append((j_obj['data'], int(item[1]), float(j_obj['lo']), float(j_obj['la'])))
+            j_obj['created'] = int(item[1])
+            j_obj['fileUrl'] = config.STATIC_BASE_URL + j_obj['fileUrl'] 
+            data.append(j_obj)
         self.set_header('Content-Type',"application/json" )
         self.write(json.dumps(data))
 

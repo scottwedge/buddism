@@ -9,13 +9,13 @@ import tornado.web
 from tornado.options import define, options
 from buddism.handler import FeedHandler
 
-define("port", default=8870, help="run on the given port", type=int)
+define("port", default=8888, help="run on the given port", type=int)
 
 
 def main():
     tornado.options.parse_command_line()
     application = tornado.web.Application([
-        (r"/", FeedHandler),
+        (r"/api/", FeedHandler),
     ])
     http_server = tornado.httpserver.HTTPServer(application)
     http_server.listen(options.port)
