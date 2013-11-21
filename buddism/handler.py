@@ -16,6 +16,7 @@ _client = Redis(config.REDIS_HOST, config.REDIS_PORT)
 _KEY = "FEED"
 _SKEY = "SERIAL"
 _FKEY = 'FABAO'
+_AKEY = 'ACTIVITY'
 
 class FeedHandler(tornado.web.RequestHandler):
     def get(self):
@@ -68,3 +69,27 @@ class FabaoHandler(tornado.web.RequestHandler):
         print _key
         send_mail(u'姓名:%s<br> QQ:%s<br> 电话:%s<br> 法宝内容:%s<br>'%(name,qq,phone,fabao))
         self.write(str(_key))
+
+class ActivityHandler(tornado.web.RequestHandler):
+    def post(self):
+        phone = self.get_argument('phone', '')
+        date = time.time()
+        ret = u'手机号格式错误' 
+        if valid_phone(phone):
+            _client.lpush(_AKEY, json.dumps({'phone':phone, 'date':time.time()}))
+            ret = u'提交成功' 
+        self.write(ret)
+
+    def get(self):
+        self.set_header('Content-type', 'text/csv') 
+        self.set_header('Content-dispostion', 'attachment;filename=activity.csv')
+        ret = 'phone\n'
+        lst = _client.lrange(_AKEY, 0, -1)
+        for item in lst:
+            data = json.loads(item)
+            ret = ret + data['phone'] + '\n'
+        self.write(ret)
+
+
+def valid_phone(phone):
+    return len(phone) == 11 and phone.isdigit()

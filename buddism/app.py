@@ -10,6 +10,7 @@ from tornado.options import define, options
 from buddism.handler import FeedHandler
 from buddism.handler import SerialHandler 
 from buddism.handler import FabaoHandler
+from buddism.handler import ActivityHandler 
 
 define("port", default=8888, help="run on the given port", type=int)
 
@@ -21,6 +22,7 @@ def main():
         (r"/api/serial", SerialHandler),
         (r"/api/feed", FeedHandler),
         (r"/api/fabao", FabaoHandler),
+        (r"/api/activity", ActivityHandler),
     ])
     http_server = tornado.httpserver.HTTPServer(application)
     http_server.listen(options.port)
