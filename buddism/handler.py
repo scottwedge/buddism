@@ -1,5 +1,5 @@
+#-*- coding:utf-8 -*-
 #!/usr/bin/env python
-#coding = utf-8
 import json
 import config
 import time
@@ -7,12 +7,15 @@ import tornado
 import os
 
 import buddism.network
+from buddism.mail import send_mail
 
 from model.audio import AudioDAO
 from redis import Redis
 
 _client = Redis(config.REDIS_HOST, config.REDIS_PORT)
 _KEY = "FEED"
+_SKEY = "SERIAL"
+_FKEY = 'FABAO'
 
 class FeedHandler(tornado.web.RequestHandler):
     def get(self):
@@ -27,9 +30,41 @@ class FeedHandler(tornado.web.RequestHandler):
         self.set_header('Content-Type',"application/json" )
         self.write(json.dumps(data))
 
+class SerialHandler(tornado.web.RequestHandler):
+    def get(self):
+        data = []
+        offset = int(self.get_argument('offset', 0))
+        limit = int(self.get_argument('limit', 20))
+        for item in _client.zrange(_SKEY, offset, limit + offset - 1, withscores = True):
+            j_obj = json.loads(item[0])
+            j_obj['created'] = int(item[1])
+            j_obj['coverUrl']='http://huaxingtan.cn/cover/grid_big.png'
+            data.append(j_obj)
+        self.set_header('Content-Type', 'application/json')
+        self.write(json.dumps(data))
+
+class FabaoHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.write('''
+            <head>
+                <meta http-equiv="refresh" content="5; url=http://huaxingtan.cn"/>
+            </head>
+            <body>
+            您的请求已经记录，我们会很快跟您联系
+            <br>
+            5秒后跳转到<a href="http://huaxingtan.cn">化性谈首页</a>
+            </body>
+        ''')
+
     def post(self):
-        data = self.get_argument('data', 'No data received')
-        lo   = self.get_argument('lo', -1)
-        la   = self.get_argument('la', -1)
-        _client.zadd(_KEY, json.dumps({'lo':lo, 'la':la, 'data':data}), int(time.time()))
-        self.write("{}")
+        name = self.get_argument('name','')
+        qq   = self.get_argument('qq', '')
+        phone = self.get_argument('phone','')
+        fabao = self.get_argument('fabao', '')
+        _key = int(time.time()*100)
+        print name
+        print qq
+        _client.lpush(_FKEY, json.dumps({'id':_key, 'name':name, 'qq':qq, 'phone':phone, 'fabao':fabao}))
+        print _key
+        send_mail(u'姓名:%s<br> QQ:%s<br> 电话:%s<br> 法宝内容:%s<br>'%(name,qq,phone,fabao))
+        self.write(str(_key))
