@@ -62,12 +62,14 @@ class FabaoHandler(tornado.web.RequestHandler):
         qq   = self.get_argument('qq', '')
         phone = self.get_argument('phone','')
         fabao = self.get_argument('fabao', '')
+        address = self.get_argument('address', '')
         _key = int(time.time()*100)
         print name
+        print address
         print qq
-        _client.lpush(_FKEY, json.dumps({'id':_key, 'name':name, 'qq':qq, 'phone':phone, 'fabao':fabao}))
+        _client.lpush(_FKEY, json.dumps({'id':_key, 'name':name, 'qq':qq, 'phone':phone, 'fabao':fabao, 'address':address}))
         print _key
-        send_mail(u'姓名:%s<br> QQ:%s<br> 电话:%s<br> 法宝内容:%s<br>'%(name,qq,phone,fabao))
+        send_mail(u'姓名:%s<br>地址:%s<br>手机:%s<br> 法宝:%s<br>'%(name,address,phone,fabao))
         self.write(str(_key))
 
 class ActivityHandler(tornado.web.RequestHandler):
@@ -81,14 +83,18 @@ class ActivityHandler(tornado.web.RequestHandler):
         self.write(ret)
 
     def get(self):
-        self.set_header('Content-type', 'text/csv') 
-        self.set_header('Content-dispostion', 'attachment;filename=activity.csv')
-        ret = 'phone\n'
-        lst = _client.lrange(_AKEY, 0, -1)
-        for item in lst:
-            data = json.loads(item)
-            ret = ret + data['phone'] + '\n'
-        self.write(ret)
+        key = self.get_argument('key', '')
+        if key != config.SECRET:
+            self.write('')
+        else:
+            self.set_header('Content-type', 'text/csv') 
+            self.set_header('Content-dispostion', 'attachment;filename=activity.csv')
+            ret = 'phone\n'
+            lst = _client.lrange(_AKEY, 0, -1)
+            for item in lst:
+                data = json.loads(item)
+                ret = ret + data['phone'] + '\n'
+            self.write(ret)
 
 
 def valid_phone(phone):

@@ -79,3 +79,4 @@ etc/dev/custom_buildout.cfg
 etc/dev/custom_supervisor.conf
 .pydevproject
 .settings/
+config/__init__.py
