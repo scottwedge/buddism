@@ -8,6 +8,8 @@ import os
 
 import buddism.network
 from buddism.mail import send_mail
+from time import strftime
+from time import localtime
 
 from model.audio import AudioDAO
 from redis import Redis
@@ -89,11 +91,12 @@ class ActivityHandler(tornado.web.RequestHandler):
         else:
             self.set_header('Content-type', 'text/csv') 
             self.set_header('Content-dispostion', 'attachment;filename=activity.csv')
-            ret = 'phone\n'
+            ret = 'phone number, date\n'
             lst = _client.lrange(_AKEY, 0, -1)
             for item in lst:
                 data = json.loads(item)
-                ret = ret + data['phone'] + '\n'
+                ret = ret + data['phone'] + ','
+                ret = ret + strftime("%Y-%m-%d %H:%M:%S",localtime(float(data['date']))) + '\n'
             self.write(ret)
 
 
